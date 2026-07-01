@@ -1,0 +1,19 @@
+{
+  "name": "visual-replication",
+  "version": "0.1.0",
+  "description": "Use when reproducing a UI, motion design, animation, screenshot, Figma design, reference video, or visual interaction. Automatically render, compare, diagnose differences, revise, and repeat.",
+  "entrypoint": "SKILL.md",
+  "skills": [
+    "SKILL.md"
+  ],
+  "scripts": [
+    "scripts/capture-page.ts",
+    "scripts/capture-animation.ts",
+    "scripts/compare-images.py",
+    "scripts/compare-video.py",
+    "scripts/generate-report.py",
+    "hooks/visual_stop_check.py"
+  ],
+  "author": "",
+  "license": "MIT"
+}

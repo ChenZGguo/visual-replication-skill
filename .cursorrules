@@ -1,0 +1,40 @@
+# Visual Replication Rules
+
+When a task involves reproducing an interface from a screenshot, design file, Figma, animation, or video:
+
+1. Do not finish immediately after the first implementation pass.
+2. Run the project and inspect the actual rendered result.
+3. Compare the actual result with the reference asset visually.
+4. Make at least one targeted improvement based on the differences.
+5. Render and compare again after changes.
+6. Finish only after the acceptance criteria are satisfied.
+
+Static interfaces must be checked for:
+
+- Layout, size, spacing, and alignment
+- Font family, font size, font weight, and line height
+- Color, border radius, shadow, and blur
+- Desktop and mobile responsive behavior
+
+Animations must be checked for:
+
+- Total duration
+- Element appearance and disappearance timing
+- Translation, scale, rotation, and opacity changes
+- Easing curves and motion rhythm
+- Layering and occlusion
+- Natural loop transitions
+
+Use the scripts in `scripts/` to capture and compare outputs:
+
+```bash
+# Static page
+npx tsx scripts/capture-page.ts --url http://localhost:3000 --output artifacts/actual.png --viewport 1440x900
+
+# Compare
+python3 scripts/compare-images.py --reference references/reference.png --actual artifacts/actual.png --output-dir artifacts/diff --report artifacts/visual-report.json
+```
+
+For video/animation references, use the `watch` skill if available, or extract frames manually with ffmpeg.
+
+Do not judge completion only by reading code. Always inspect the rendered result.

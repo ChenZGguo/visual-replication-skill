@@ -1,0 +1,35 @@
+{
+  "enabled": true,
+  "mode": "auto",
+  "validationCommand": "python3 scripts/generate-report.py --project-root \"$PWD\" --report artifacts/visual-report.json",
+  "reportPath": "artifacts/visual-report.json",
+  "diffPath": "artifacts/diff",
+  "watchSkillPath": "~/.codex/skills/watch/scripts/watch.py",
+  "referencePaths": [
+    "references",
+    "reference",
+    "design",
+    "figma",
+    "screenshots/reference",
+    "artifacts/reference"
+  ],
+  "triggerKeywords": [
+    "screenshot",
+    "design",
+    "figma",
+    "animation",
+    "video",
+    "visual",
+    "reproduce",
+    "replicate",
+    "pixel",
+    "截图",
+    "设计稿",
+    "复刻",
+    "还原",
+    "动画",
+    "视频",
+    "视觉",
+    "像素"
+  ]
+}

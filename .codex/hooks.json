@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$(git rev-parse --show-toplevel 2>/dev/null || pwd)/hooks/visual_stop_check.py\"",
+            "timeout": 300,
+            "statusMessage": "正在检查视觉复刻结果"
+          }
+        ]
+      }
+    ]
+  }
+}
