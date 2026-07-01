@@ -28,6 +28,9 @@ For any project where you want this skill to apply, copy these files into the pr
 
 ```text
 AGENTS.md
+config.json
+scripts/
+hooks/
 .cursorrules
 .codex/hooks.json
 ```
@@ -39,10 +42,10 @@ Then create a `references/` directory and place your reference screenshots or vi
 ### Codex
 
 ```bash
-git clone https://github.com/YOUR_NAME/visual-replication-skill.git ~/.codex/skills/visual-replication
+git clone https://github.com/ChenZGguo/visual-replication-skill.git ~/.codex/skills/visual-replication
 ```
 
-Also copy `AGENTS.md` and `.codex/hooks.json` into your project root.
+Also run `~/.codex/skills/visual-replication/install.sh init --platform codex` in the project root, or copy `AGENTS.md`, `config.json`, `scripts/`, `hooks/`, and `.codex/hooks.json` into your project root.
 
 ### Claude Code
 
@@ -70,10 +73,10 @@ config.json
 ### Codewiz / Seal
 
 ```bash
-git clone https://github.com/YOUR_NAME/visual-replication-skill.git ~/.config/codewiz/skills/visual-replication
+git clone https://github.com/ChenZGguo/visual-replication-skill.git ~/.config/codewiz/skills/visual-replication
 ```
 
-Also copy `AGENTS.md` into your project root.
+Also run `~/.config/codewiz/skills/visual-replication/install.sh init --platform codewiz` in the project root, or copy `AGENTS.md`, `config.json`, `scripts/`, and `hooks/` into your project root.
 
 ## Usage
 
@@ -130,7 +133,8 @@ python3 hooks/visual_stop_check.py
 ## Requirements
 
 - Node.js + `npx` (for TypeScript scripts)
-- Playwright (`npm install -g playwright` or project-local)
+- Playwright and browser binaries (`npm install -D playwright` and `npx playwright install chromium`, or project-local equivalents)
+- `tsx` for running TypeScript scripts (`npm install -D tsx`, or use `npx tsx`)
 - Python 3
 - Pillow (`python3 -m pip install pillow`)
 - OpenCV + NumPy for video comparison (`python3 -m pip install opencv-python numpy`)

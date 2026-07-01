@@ -23,6 +23,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--report", default="artifacts/visual-report.json")
     parser.add_argument("--threshold", type=float, default=0.985, help="Minimum similarity score required to pass.")
     parser.add_argument("--pixel-threshold", type=int, default=24, help="Per-channel diff threshold for changed pixels.")
+    parser.add_argument("--allow-resize", action="store_true", help="Resize actual image to reference size instead of failing on size mismatch.")
     return parser.parse_args()
 
 
@@ -39,8 +40,26 @@ def main() -> int:
     actual = Image.open(actual_path).convert("RGB")
 
     issues: list[str] = []
+    size_mismatch = reference.size != actual.size
     if reference.size != actual.size:
         issues.append(f"Image size differs: reference={reference.size}, actual={actual.size}")
+        if not args.allow_resize:
+            report = {
+                "pass": False,
+                "status": "fail",
+                "score": 0.0,
+                "threshold": args.threshold,
+                "reference": str(reference_path),
+                "actual": str(actual_path),
+                "diff": None,
+                "changedPixels": None,
+                "totalPixels": reference.size[0] * reference.size[1],
+                "changedRatio": None,
+                "issues": issues,
+            }
+            report_path.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+            print(json.dumps(report, ensure_ascii=False, indent=2))
+            return 1
         actual = actual.resize(reference.size)
 
     diff = ImageChops.difference(reference, actual)
@@ -52,7 +71,7 @@ def main() -> int:
     changed_pixels = sum(count for value, count in enumerate(histogram) if value > args.pixel_threshold)
     changed_ratio = changed_pixels / total_pixels if total_pixels else 1.0
     similarity = max(0.0, 1.0 - changed_ratio)
-    passed = similarity >= args.threshold
+    passed = similarity >= args.threshold and (not size_mismatch or args.allow_resize)
 
     if not passed:
         issues.append(f"Similarity {similarity:.4f} is below threshold {args.threshold:.4f}")

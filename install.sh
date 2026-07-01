@@ -6,14 +6,14 @@ set -euo pipefail
 #
 # Usage:
 #   # 方式一：克隆后本地运行
-#   git clone https://github.com/USER/visual-replication-skill.git
+#   git clone https://github.com/ChenZGguo/visual-replication-skill.git
 #   cd visual-replication-skill
 #   ./install.sh                  # 全局安装（自动检测平台）
 #   ./install.sh init             # 在当前项目初始化
 #   ./install.sh all              # 全局安装 + 项目初始化
 #
 #   # 方式二：curl 一键安装（仅全局）
-#   curl -fsSL https://raw.githubusercontent.com/USER/visual-replication-skill/main/install.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/ChenZGguo/visual-replication-skill/main/install.sh | bash
 #
 #   # 指定平台
 #   ./install.sh global --platform codewiz
@@ -39,7 +39,7 @@ warn()  { printf "${YELLOW}[WARN]${NC} %s\n" "$1"; }
 error() { printf "${RED}[ERROR]${NC} %s\n" "$1" >&2; }
 step()  { printf "\n${CYAN}▸ %s${NC}\n" "$1"; }
 
-GITHUB_REPO="https://github.com/USER/visual-replication-skill.git"
+GITHUB_REPO="https://github.com/ChenZGguo/visual-replication-skill.git"
 REPO_NAME="visual-replication-skill"
 
 SKILL_FILES=(
@@ -55,6 +55,9 @@ SKILL_FILES=(
 
 PROJECT_FILES_ALL=(
   "AGENTS.md"
+  "config.json"
+  "scripts"
+  "hooks"
 )
 
 PROJECT_FILES_CODEX=(
@@ -93,6 +96,10 @@ resolve_platform() {
   while [[ $# -gt 0 ]]; do
     case "$1" in
       --platform)
+        if [[ $# -lt 2 || "${2:-}" == --* ]]; then
+          error "--platform 需要指定值: codewiz | codex | claude | cursor"
+          exit 2
+        fi
         platform="$2"
         shift 2
         ;;
@@ -130,6 +137,25 @@ get_script_dir() {
 
 is_curl_install() {
   [[ ! -f "$1/install.sh" ]]
+}
+
+copy_with_backup() {
+  local source="$1"
+  local target="$2"
+  local label="$3"
+
+  if [[ -e "$target" ]]; then
+    local backup="${target}.bak.$(date +%Y%m%d%H%M%S)"
+    mv "$target" "$backup"
+    warn "已备份现有 ${label}: ${backup}"
+  fi
+
+  if [[ -d "$source" ]]; then
+    cp -R "$source" "$target"
+  else
+    cp "$source" "$target"
+  fi
+  ok "已复制: ${label}"
 }
 
 download_repo() {
@@ -226,8 +252,9 @@ install_global() {
       info "安装目录: ${skill_dir}"
 
       if [[ -d "$skill_dir" ]]; then
-        warn "目录已存在，将覆盖: ${skill_dir}"
-        rm -rf "$skill_dir"
+        local backup_dir="${skill_dir}.bak.$(date +%Y%m%d%H%M%S)"
+        warn "目录已存在，将备份后覆盖: ${backup_dir}"
+        mv "$skill_dir" "$backup_dir"
       fi
 
       mkdir -p "$skill_dir"
@@ -264,7 +291,7 @@ install_global() {
 
   printf "下一步：在需要视觉复刻的项目中初始化:\n\n"
   printf "  bash %s/install.sh init --platform %s\n\n" "${skill_dir:-<skill_dir>}" "$platform"
-  printf "或手动复制 AGENTS.md 到项目根目录即可。\n"
+  printf "或手动复制 AGENTS.md、config.json、scripts/、hooks/ 到项目根目录。\n"
 }
 
 # ============================================================
@@ -289,8 +316,7 @@ install_init() {
 
   for file in "${PROJECT_FILES_ALL[@]}"; do
     if [[ -e "$source_dir/$file" ]]; then
-      cp "$source_dir/$file" "$project_root/$file"
-      ok "已复制: ${file}"
+      copy_with_backup "$source_dir/$file" "$project_root/$file" "$file"
     fi
   done
 
@@ -300,8 +326,7 @@ install_init() {
         local target="$project_root/$file"
         mkdir -p "$(dirname "$target")"
         if [[ -e "$source_dir/$file" ]]; then
-          cp "$source_dir/$file" "$target"
-          ok "已复制: ${file}"
+          copy_with_backup "$source_dir/$file" "$target" "$file"
         fi
       done
       ;;
@@ -309,14 +334,13 @@ install_init() {
     cursor)
       for file in "${PROJECT_FILES_CURSOR[@]}"; do
         if [[ -e "$source_dir/$file" ]]; then
-          cp "$source_dir/$file" "$project_root/$file"
-          ok "已复制: ${file}"
+          copy_with_backup "$source_dir/$file" "$project_root/$file" "$file"
         fi
       done
       ;;
 
     codewiz|claude)
-      ok "平台 ${platform} 仅需 AGENTS.md，已就绪"
+      ok "平台 ${platform} 所需项目级资源已就绪"
       ;;
   esac
 
@@ -434,7 +458,7 @@ show_doctor() {
   done
 
   printf "\n${CYAN}项目级文件:${NC}\n"
-  for f in "AGENTS.md" ".codex/hooks.json" ".cursorrules" "references" "artifacts"; do
+  for f in "AGENTS.md" "config.json" "scripts" "hooks" ".codex/hooks.json" ".cursorrules" "references" "artifacts"; do
     if [[ -e "$f" ]]; then
       ok "$f"
     else

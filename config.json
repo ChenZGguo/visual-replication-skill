@@ -4,6 +4,7 @@
   "validationCommand": "python3 scripts/generate-report.py --project-root \"$PWD\" --report artifacts/visual-report.json",
   "reportPath": "artifacts/visual-report.json",
   "diffPath": "artifacts/diff",
+  "maxReportAgeSeconds": 86400,
   "watchSkillPath": "~/.codex/skills/watch/scripts/watch.py",
   "referencePaths": [
     "references",

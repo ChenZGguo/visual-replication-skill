@@ -54,6 +54,12 @@ async function main() {
   if (!width || !height) {
     throw new Error(`Invalid --viewport: ${options.viewport}`);
   }
+  if (!Number.isFinite(options.durationMs) || options.durationMs <= 0) {
+    throw new Error(`Invalid --duration-ms: ${options.durationMs}`);
+  }
+  if (!Number.isFinite(options.fps) || options.fps <= 0) {
+    throw new Error(`Invalid --fps: ${options.fps}`);
+  }
 
   await fs.mkdir(options.outputDir, { recursive: true });
   const browser = await chromium.launch();

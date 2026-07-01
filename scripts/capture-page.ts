@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 import { chromium } from 'playwright';
+import fs from 'node:fs/promises';
+import path from 'node:path';
 
 type Options = {
   url: string;
@@ -61,6 +63,7 @@ async function main() {
     }
   });
   await page.waitForTimeout(options.waitMs);
+  await fs.mkdir(path.dirname(options.output), { recursive: true });
   await page.screenshot({ path: options.output, fullPage: options.fullPage });
   await browser.close();
 }

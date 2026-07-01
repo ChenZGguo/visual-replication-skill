@@ -45,15 +45,44 @@ def main() -> int:
     actual = cv2.VideoCapture(args.actual)
     frame_scores: list[float] = []
     issues: list[str] = []
+    blocking_issues: list[str] = []
     worst_frame = -1
     worst_score = 1.0
+
+    if not reference.isOpened():
+        blocking_issues.append(f"Reference video could not be opened: {args.reference}")
+    if not actual.isOpened():
+        blocking_issues.append(f"Actual video could not be opened: {args.actual}")
+
+    reference_frame_count = int(reference.get(cv2.CAP_PROP_FRAME_COUNT) or 0)
+    actual_frame_count = int(actual.get(cv2.CAP_PROP_FRAME_COUNT) or 0)
+    reference_fps = float(reference.get(cv2.CAP_PROP_FPS) or 0.0)
+    actual_fps = float(actual.get(cv2.CAP_PROP_FPS) or 0.0)
+
+    if reference_fps and actual_fps and abs(reference_fps - actual_fps) > 0.01:
+        blocking_issues.append(f"FPS differs: reference={reference_fps:.3f}, actual={actual_fps:.3f}")
+
+    if reference_frame_count and actual_frame_count and abs(reference_frame_count - actual_frame_count) > 1:
+        blocking_issues.append(f"Frame count differs: reference={reference_frame_count}, actual={actual_frame_count}")
+
+    if reference_fps and actual_fps and reference_frame_count and actual_frame_count:
+        reference_duration = reference_frame_count / reference_fps
+        actual_duration = actual_frame_count / actual_fps
+        if abs(reference_duration - actual_duration) > 0.05:
+            blocking_issues.append(f"Duration differs: reference={reference_duration:.3f}s, actual={actual_duration:.3f}s")
 
     for frame_index in range(args.max_frames):
         reference_frame = read_frame(reference)
         actual_frame = read_frame(actual)
+        if reference_frame is None and actual_frame is None:
+            break
         if reference_frame is None or actual_frame is None:
+            blocking_issues.append(f"One video ended early at frame {frame_index}.")
             break
         if reference_frame.shape != actual_frame.shape:
+            blocking_issues.append(
+                f"Frame size differs at frame {frame_index}: reference={reference_frame.shape}, actual={actual_frame.shape}"
+            )
             actual_frame = cv2.resize(actual_frame, (reference_frame.shape[1], reference_frame.shape[0]))
         diff = cv2.absdiff(reference_frame, actual_frame)
         score = 1.0 - float(np.mean(diff) / 255.0)
@@ -64,12 +93,13 @@ def main() -> int:
             cv2.imwrite(str(output_dir / "worst-frame-diff.png"), diff)
 
     if not frame_scores:
-        issues.append("No comparable frames were found.")
+        blocking_issues.append("No comparable frames were found.")
         score = 0.0
     else:
         score = float(sum(frame_scores) / len(frame_scores))
 
-    passed = score >= args.threshold
+    issues.extend(blocking_issues)
+    passed = score >= args.threshold and not blocking_issues
     if not passed:
         issues.append(f"Average frame similarity {score:.4f} is below threshold {args.threshold:.4f}")
         if worst_frame >= 0:
