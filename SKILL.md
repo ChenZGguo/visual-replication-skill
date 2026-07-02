@@ -35,6 +35,32 @@ Use Playwright or the browser tools available to the agent to:
 
 ## Animation / Video Reference Validation
 
+### Animation strategy selection
+
+Before implementing any animation, GIF, motion graphic, or reference video, classify the reference into exactly one primary strategy. State the selected strategy and the reason before implementation.
+
+| Strategy | Use when | Preferred output | Avoid when |
+|---|---|---|---|
+| Generative video | The reference is photorealistic, includes people, natural scenes, complex lighting/materials, camera realism, or details that cannot be decomposed into stable layers. | MP4, MOV, WebM, GIF, image sequence | Precise UI timing, editable vector assets, transparent backgrounds, deterministic interaction, text/UI consistency |
+| Lottie / vector keyframe animation | The reference is a logo, icon, loading animation, UI micro-interaction, short loop, path reveal, shape morph, opacity/position/scale/rotation keyframes, masks, or layered vector motion. | Lottie JSON, dotLottie, vector assets | Photorealistic scenes, fluids, particles, large real-time simulations, long narrative videos |
+| Programmatic animation | The motion is best described by code, math, physics, particles, data, Canvas, SVG, WebGL, Three.js, p5.js, GSAP, shaders, or real-time user input. | Web app, Canvas, SVG, WebGL, shader, recorded video | Photorealistic footage or animation that depends on generative model style rather than deterministic rules |
+
+Decision rules:
+
+- Choose generative video for realistic people, natural environments, complex camera shots, or model-generated visual style.
+- Choose Lottie when the animation can be decomposed into vector layers, paths, masks, keyframes, and easing curves.
+- Choose programmatic animation when deterministic control, interactivity, parameters, data, particles, geometry, or real-time rendering are central.
+- If both Lottie and programmatic animation are viable, prefer the smaller and more maintainable output. Use Lottie for asset-like UI motion and programmatic animation for interaction or simulation.
+- If the selected strategy is Lottie, prefer the Text-to-Lottie skill from `diffusionstudio/lottie` when available. Install with `npx skills add diffusionstudio/lottie`, then ask the agent to generate a Lottie animation using `text-to-lottie`.
+- If classification is uncertain, inspect extracted frames first, list the top two candidate strategies, then choose the one with higher determinism and editability.
+
+The implementation plan must include:
+
+- Selected strategy: `generative-video`, `lottie`, or `programmatic-animation`
+- Evidence from the reference that supports the choice
+- Expected output format
+- Validation method and thresholds
+
 ### Reading the reference video
 
 Prefer the `watch` skill (`~/.codex/skills/watch`) to analyze the reference video first:
@@ -65,10 +91,15 @@ After implementing, normalize the reference and implementation to:
 Compare:
 
 - Key frames
+- Frame-to-frame motion deltas, not only individual frame pixels
 - Element positions over time
 - Opacity, scale, and rotation
 - Animation start and end times
 - Easing and motion rhythm
+- Loop seam continuity when the reference is looping
+- Timing drift for entrances, exits, pauses, accelerations, and decelerations
+
+Motion validation must inspect both absolute frames and temporal changes. A visually similar still frame sequence can still fail if the speed, easing, acceleration, or previous-to-next-frame deltas do not match the reference.
 
 Generate:
 

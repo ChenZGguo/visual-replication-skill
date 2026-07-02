@@ -100,6 +100,22 @@ python3 scripts/compare-images.py \
 
 ### Animation / video reference
 
+Before implementation, classify the reference into one primary strategy:
+
+| Strategy | Choose for | Typical output |
+|---|---|---|
+| Generative video | Photorealistic people, natural scenes, complex camera/light/materials, model-generated style | MP4, MOV, WebM, GIF, image sequence |
+| Lottie / vector keyframe animation | Logos, icons, loaders, UI micro-interactions, path reveals, masks, shape morphs, short loops | Lottie JSON, dotLottie |
+| Programmatic animation | Deterministic math, particles, physics, data, Canvas, SVG, WebGL, Three.js, p5.js, GSAP, shaders, interaction | Web app, Canvas, SVG, WebGL, recorded video |
+
+For Lottie work, prefer Text-to-Lottie when available:
+
+```bash
+npx skills add diffusionstudio/lottie
+```
+
+Then ask the coding agent to generate a Lottie animation using `text-to-lottie`.
+
 Read the reference video with the `watch` skill if available:
 
 ```bash
@@ -119,8 +135,12 @@ python3 scripts/compare-video.py \
   --reference references/reference.mp4 \
   --actual artifacts/actual.mp4 \
   --output-dir artifacts/diff \
-  --report artifacts/visual-report.json
+  --report artifacts/visual-report.json \
+  --threshold 0.965 \
+  --motion-threshold 0.93
 ```
+
+Video comparison checks both frame similarity and frame-to-frame motion similarity, so timing, speed, easing, acceleration, deceleration, and loop seams are not judged by still frames alone.
 
 ### Finish-time check
 

@@ -19,11 +19,21 @@ Static interfaces must be checked for:
 Animations must be checked for:
 
 - Total duration
+- Selected strategy: generative video, Lottie/vector keyframe animation, or programmatic animation
 - Element appearance and disappearance timing
 - Translation, scale, rotation, and opacity changes
 - Easing curves and motion rhythm
+- Frame-to-frame motion deltas, acceleration, and deceleration
 - Layering and occlusion
 - Natural loop transitions
+
+Before implementing an animation, classify the reference:
+
+- Generative video: photorealistic people, natural scenes, complex lighting/materials, camera realism, or model-generated style. Prefer video/image-sequence generation outputs.
+- Lottie/vector keyframe animation: logo, icon, loader, UI micro-interaction, short loop, SVG path reveal, shape morph, masks, opacity/position/scale/rotation keyframes. Prefer Lottie JSON or dotLottie, and use the Text-to-Lottie skill (`npx skills add diffusionstudio/lottie`) when available.
+- Programmatic animation: deterministic math, particles, physics, data, Canvas, SVG, WebGL, Three.js, p5.js, GSAP, shaders, or real-time user input. Prefer code-based implementation.
+
+State the selected strategy and evidence before implementation. If multiple strategies fit, prefer the one with higher determinism, editability, and smaller output for the required use case.
 
 Do not judge completion only by reading code. Always inspect the rendered result.
 

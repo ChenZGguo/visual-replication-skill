@@ -8,13 +8,6 @@ import json
 import pathlib
 import sys
 
-try:
-    import cv2
-    import numpy as np
-except ImportError:
-    print("opencv-python and numpy are required. Install with: python3 -m pip install opencv-python numpy", file=sys.stderr)
-    raise SystemExit(2)
-
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
@@ -23,6 +16,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--output-dir", default="artifacts/diff")
     parser.add_argument("--report", default="artifacts/visual-report.json")
     parser.add_argument("--threshold", type=float, default=0.965)
+    parser.add_argument("--motion-threshold", type=float, default=0.93)
     parser.add_argument("--max-frames", type=int, default=240)
     return parser.parse_args()
 
@@ -36,6 +30,13 @@ def read_frame(capture: cv2.VideoCapture):
 
 def main() -> int:
     args = parse_args()
+    try:
+        import cv2
+        import numpy as np
+    except ImportError:
+        print("opencv-python and numpy are required. Install with: python3 -m pip install opencv-python numpy", file=sys.stderr)
+        return 2
+
     output_dir = pathlib.Path(args.output_dir)
     report_path = pathlib.Path(args.report)
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -44,10 +45,15 @@ def main() -> int:
     reference = cv2.VideoCapture(args.reference)
     actual = cv2.VideoCapture(args.actual)
     frame_scores: list[float] = []
+    motion_scores: list[float] = []
     issues: list[str] = []
     blocking_issues: list[str] = []
     worst_frame = -1
     worst_score = 1.0
+    worst_motion_frame = -1
+    worst_motion_score = 1.0
+    previous_reference_frame = None
+    previous_actual_frame = None
 
     if not reference.isOpened():
         blocking_issues.append(f"Reference video could not be opened: {args.reference}")
@@ -92,30 +98,59 @@ def main() -> int:
             worst_frame = frame_index
             cv2.imwrite(str(output_dir / "worst-frame-diff.png"), diff)
 
+        if previous_reference_frame is not None and previous_actual_frame is not None:
+            reference_motion = cv2.absdiff(reference_frame, previous_reference_frame)
+            actual_motion = cv2.absdiff(actual_frame, previous_actual_frame)
+            motion_diff = cv2.absdiff(reference_motion, actual_motion)
+            motion_score = 1.0 - float(np.mean(motion_diff) / 255.0)
+            motion_scores.append(motion_score)
+            if motion_score < worst_motion_score:
+                worst_motion_score = motion_score
+                worst_motion_frame = frame_index
+                cv2.imwrite(str(output_dir / "worst-motion-diff.png"), motion_diff)
+
+        previous_reference_frame = reference_frame
+        previous_actual_frame = actual_frame
+
     if not frame_scores:
         blocking_issues.append("No comparable frames were found.")
         score = 0.0
     else:
         score = float(sum(frame_scores) / len(frame_scores))
 
+    if motion_scores:
+        motion_score = float(sum(motion_scores) / len(motion_scores))
+    else:
+        motion_score = 0.0 if len(frame_scores) > 1 else 1.0
+
     issues.extend(blocking_issues)
-    passed = score >= args.threshold and not blocking_issues
+    passed = score >= args.threshold and motion_score >= args.motion_threshold and not blocking_issues
     if not passed:
-        issues.append(f"Average frame similarity {score:.4f} is below threshold {args.threshold:.4f}")
+        if score < args.threshold:
+            issues.append(f"Average frame similarity {score:.4f} is below threshold {args.threshold:.4f}")
+        if motion_score < args.motion_threshold:
+            issues.append(f"Average frame-to-frame motion similarity {motion_score:.4f} is below threshold {args.motion_threshold:.4f}")
         if worst_frame >= 0:
             issues.append(f"Worst frame index: {worst_frame}, score={worst_score:.4f}")
+        if worst_motion_frame >= 0:
+            issues.append(f"Worst motion frame index: {worst_motion_frame}, score={worst_motion_score:.4f}")
 
     report = {
         "pass": passed,
         "status": "pass" if passed else "fail",
         "score": score,
         "threshold": args.threshold,
+        "motionScore": motion_score,
+        "motionThreshold": args.motion_threshold,
         "reference": args.reference,
         "actual": args.actual,
         "diff": str(output_dir),
         "comparedFrames": len(frame_scores),
+        "comparedMotionFrames": len(motion_scores),
         "worstFrame": worst_frame,
         "worstFrameScore": worst_score,
+        "worstMotionFrame": worst_motion_frame,
+        "worstMotionFrameScore": worst_motion_score,
         "issues": issues,
     }
     report_path.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")

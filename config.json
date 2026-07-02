@@ -5,6 +5,64 @@
   "reportPath": "artifacts/visual-report.json",
   "diffPath": "artifacts/diff",
   "maxReportAgeSeconds": 86400,
+  "imageComparison": {
+    "similarityThreshold": 0.985,
+    "pixelThreshold": 24,
+    "allowResize": false
+  },
+  "videoComparison": {
+    "frameSimilarityThreshold": 0.965,
+    "motionSimilarityThreshold": 0.93,
+    "maxDurationDriftSeconds": 0.05,
+    "maxFrameCountDifference": 1,
+    "requireMatchingFps": true,
+    "requireMatchingResolution": true
+  },
+  "animationStrategies": {
+    "generativeVideo": {
+      "useWhen": [
+        "photorealistic people",
+        "natural scenes",
+        "complex lighting or materials",
+        "camera realism",
+        "model-generated visual style"
+      ],
+      "preferredOutputs": ["mp4", "mov", "webm", "gif", "image-sequence"]
+    },
+    "lottie": {
+      "useWhen": [
+        "logo animation",
+        "icon animation",
+        "loader",
+        "UI micro-interaction",
+        "short loop",
+        "SVG path reveal",
+        "shape morph",
+        "mask animation",
+        "vector keyframes"
+      ],
+      "preferredOutputs": ["lottie-json", "dotlottie"],
+      "preferredSkill": "text-to-lottie",
+      "installCommand": "npx skills add diffusionstudio/lottie"
+    },
+    "programmaticAnimation": {
+      "useWhen": [
+        "deterministic math",
+        "particles",
+        "physics",
+        "data visualization",
+        "Canvas",
+        "SVG",
+        "WebGL",
+        "Three.js",
+        "p5.js",
+        "GSAP",
+        "shaders",
+        "real-time user input"
+      ],
+      "preferredOutputs": ["web-app", "canvas", "svg", "webgl", "shader", "recorded-video"]
+    }
+  },
   "watchSkillPath": "~/.codex/skills/watch/scripts/watch.py",
   "referencePaths": [
     "references",

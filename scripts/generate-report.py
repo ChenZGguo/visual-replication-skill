@@ -31,7 +31,12 @@ def main() -> int:
     passed = bool(report.get("pass")) or str(report.get("status", "")).lower() in {"pass", "passed", "success", "ok"}
     score = report.get("score", "n/a")
     threshold = report.get("threshold", "n/a")
-    print(f"Visual report: {'PASS' if passed else 'FAIL'} score={score} threshold={threshold}")
+    motion_score = report.get("motionScore")
+    motion_threshold = report.get("motionThreshold")
+    summary = f"Visual report: {'PASS' if passed else 'FAIL'} score={score} threshold={threshold}"
+    if motion_score is not None or motion_threshold is not None:
+        summary += f" motionScore={motion_score} motionThreshold={motion_threshold}"
+    print(summary)
     if report.get("issues"):
         print("Issues:")
         for issue in report["issues"][:10]:
