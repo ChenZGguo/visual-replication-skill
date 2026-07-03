@@ -20,7 +20,7 @@
 | **Codex** | `git clone` 到 `~/.codex/skills/` | 通过 `SKILL.md` 描述触发 | `.codex/hooks.json` Stop Hook |
 | **Claude Code** | 通过 `.claude-plugin/plugin.json` | Plugin/skill 系统 | 手动或由 skill 调用 |
 | **Cursor** | 复制 `.cursorrules` 和脚本到项目 | 每个项目加载 `.cursorrules` | 无 |
-| **Codewiz / Seal（本平台）** | `git clone` 到 `~/.config/codewiz/skills/` | 通过 `SKILL.md` 描述触发 | 手动检查脚本 |
+| **Codewiz** | `git clone` 到 `~/.config/codewiz/skills/` | 通过 `SKILL.md` 描述触发 | 手动检查脚本 |
 
 ## 项目级文件
 
@@ -76,7 +76,7 @@ subagents/
 config.json
 ```
 
-### Codewiz / Seal
+### Codewiz
 
 ```bash
 git clone https://github.com/ChenZGguo/visual-replication-skill.git ~/.config/codewiz/skills/visual-replication
