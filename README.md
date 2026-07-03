@@ -1,30 +1,30 @@
 # Visual Replication Skill
 
-A multi-platform, agent-neutral skill for reproducing UIs, motion designs, animations, screenshots, Figma designs, reference videos, and visual interactions.
+一个跨平台、与具体 Agent 无关的视觉复刻 skill，用于复刻 UI、动效设计、动画、截图、Figma 设计稿、参考视频和视觉交互。
 
-The implementation loop is:
+核心循环：
 
-1. Analyze the reference.
-2. Implement.
-3. Render the real application.
-4. Capture actual output.
-5. Compare reference and actual output.
-6. Fix the highest-impact differences.
-7. Re-render and re-compare.
-8. Finish only after validation evidence exists.
+1. 分析参考素材。
+2. 实现初版。
+3. 运行真实应用。
+4. 捕获实际输出。
+5. 对比参考与实际输出。
+6. 修复影响最大的差异。
+7. 重新渲染并再次对比。
+8. 只有存在验证证据后才完成。
 
-## Supported Platforms
+## 支持平台
 
-| Platform | Installation | Auto-trigger | Hook |
+| 平台 | 安装方式 | 自动触发 | Hook |
 |---|---|---|---|
-| **Codex** | `git clone` into `~/.codex/skills/` | Via `SKILL.md` description | `.codex/hooks.json` Stop Hook |
-| **Claude Code** | Via `.claude-plugin/plugin.json` | Plugin/skill system | Manual or skill-invoked |
-| **Cursor** | Copy `.cursorrules` + scripts to project | `.cursorrules` loaded per project | None |
-| **Codewiz / Seal (本平台)** | `git clone` into `~/.config/codewiz/skills/` | Via `SKILL.md` description | Manual check script |
+| **Codex** | `git clone` 到 `~/.codex/skills/` | 通过 `SKILL.md` 描述触发 | `.codex/hooks.json` Stop Hook |
+| **Claude Code** | 通过 `.claude-plugin/plugin.json` | Plugin/skill 系统 | 手动或由 skill 调用 |
+| **Cursor** | 复制 `.cursorrules` 和脚本到项目 | 每个项目加载 `.cursorrules` | 无 |
+| **Codewiz / Seal（本平台）** | `git clone` 到 `~/.config/codewiz/skills/` | 通过 `SKILL.md` 描述触发 | 手动检查脚本 |
 
-## Project-level files
+## 项目级文件
 
-For any project where you want this skill to apply, copy these files into the project root:
+如果想让某个项目使用此 skill，把这些文件复制到项目根目录：
 
 ```text
 AGENTS.md
@@ -35,9 +35,9 @@ hooks/
 .codex/hooks.json
 ```
 
-Then create a `references/` directory and place your reference screenshots or videos there.
+然后创建 `references/` 目录，把参考截图或视频放进去。
 
-## Global skill installation
+## 全局安装
 
 ### Codex
 
@@ -45,21 +45,27 @@ Then create a `references/` directory and place your reference screenshots or vi
 git clone https://github.com/ChenZGguo/visual-replication-skill.git ~/.codex/skills/visual-replication
 ```
 
-Also run `~/.codex/skills/visual-replication/install.sh init --platform codex` in the project root, or copy `AGENTS.md`, `config.json`, `scripts/`, `hooks/`, and `.codex/hooks.json` into your project root.
+还需要在项目根目录运行：
+
+```bash
+~/.codex/skills/visual-replication/install.sh init --platform codex
+```
+
+也可以手动复制 `AGENTS.md`、`config.json`、`scripts/`、`hooks/` 和 `.codex/hooks.json` 到项目根目录。
 
 ### Claude Code
 
-Install the plugin from the local directory:
+从本地目录安装插件：
 
 ```bash
 /plugin install /path/to/visual-replication-skill
 ```
 
-Or publish to the Claude Code plugin marketplace.
+也可以发布到 Claude Code 插件市场。
 
 ### Cursor
 
-Cursor does not have a global skill system. Copy these into each project:
+Cursor 没有全局 skill 系统。需要复制这些内容到每个项目：
 
 ```text
 .cursorrules
@@ -76,19 +82,25 @@ config.json
 git clone https://github.com/ChenZGguo/visual-replication-skill.git ~/.config/codewiz/skills/visual-replication
 ```
 
-Also run `~/.config/codewiz/skills/visual-replication/install.sh init --platform codewiz` in the project root, or copy `AGENTS.md`, `config.json`, `scripts/`, and `hooks/` into your project root.
+还需要在项目根目录运行：
 
-## Usage
+```bash
+~/.config/codewiz/skills/visual-replication/install.sh init --platform codewiz
+```
 
-### Static UI reference
+也可以手动复制 `AGENTS.md`、`config.json`、`scripts/` 和 `hooks/` 到项目根目录。
 
-Capture the implemented page:
+## 使用方式
+
+### 静态 UI 参考
+
+捕获已实现页面：
 
 ```bash
 npx tsx scripts/capture-page.ts --url http://localhost:3000 --output artifacts/actual.png --viewport 1440x900
 ```
 
-Compare with the reference:
+与参考图对比：
 
 ```bash
 python3 scripts/compare-images.py \
@@ -98,37 +110,55 @@ python3 scripts/compare-images.py \
   --report artifacts/visual-report.json
 ```
 
-### Animation / video reference
+静态界面需要检查：布局、尺寸、间距、对齐、字体、字号、字重、行高、颜色、圆角、阴影、模糊，以及桌面和移动端响应式表现。
 
-Before implementation, classify the reference into one primary strategy:
+### 动效 / 视频参考
 
-| Strategy | Choose for | Typical output |
+实现前必须先把参考归类为一个主策略：
+
+| 策略 | 适用场景 | 典型输出 |
 |---|---|---|
-| Generative video | Photorealistic people, natural scenes, complex camera/light/materials, model-generated style | MP4, MOV, WebM, GIF, image sequence |
-| Lottie / vector keyframe animation | Logos, icons, loaders, UI micro-interactions, path reveals, masks, shape morphs, short loops | Lottie JSON, dotLottie |
-| Programmatic animation | Deterministic math, particles, physics, data, Canvas, SVG, WebGL, Three.js, p5.js, GSAP, shaders, interaction | Web app, Canvas, SVG, WebGL, recorded video |
+| 生成式视频 | 写实人物、自然场景、复杂相机/光照/材质、模型生成风格 | MP4、MOV、WebM、GIF、图像序列 |
+| Lottie / 矢量关键帧动画 | Logo、图标、加载动画、UI 微交互、路径 reveal、mask、形态 morph、短循环 | Lottie JSON、dotLottie |
+| 程序化动画 | 确定性数学、粒子、物理、数据、Canvas、SVG、WebGL、Three.js、p5.js、GSAP、shader、交互 | Web app、Canvas、SVG、WebGL、录制视频 |
 
-For Lottie work, prefer Text-to-Lottie when available:
+动效复刻必须先完成分析门槛：
+
+1. 按参考素材原始帧率抽取全部帧。
+2. 基于完整帧序列分析动效，不得只看采样帧、稀疏截图或关键帧。
+3. 向用户描述 agent 理解的动效：语义复述、视觉状态、关键对象、时间线、运动节奏、形态过渡和衔接连续性。
+4. 得到用户明确认可后，才能开始代码复刻。
+5. 复杂动效先拆阶段，建立 reference phase map，再逐阶段复刻并整合。
+
+抽取参考视频全部帧：
 
 ```bash
-npx skills add diffusionstudio/lottie
+ffmpeg -i "<reference-video>" -vsync 0 artifacts/reference-frames/frame_%06d.png
 ```
 
-Then ask the coding agent to generate a Lottie animation using `text-to-lottie`.
-
-Read the reference video with the `watch` skill if available:
+如果有 `watch` skill，可作为补充概览和字幕提取工具：
 
 ```bash
 python3 ~/.codex/skills/watch/scripts/watch.py "<reference-video>" --out-dir artifacts/reference-frames
 ```
 
-Capture your implementation as frames:
+注意：`watch` 输出的自动缩放帧只能作为概览；动效语义、阶段拆分和过渡分析必须以全部帧为准。
+
+Lottie 任务可优先使用 Text-to-Lottie：
+
+```bash
+npx skills add diffusionstudio/lottie
+```
+
+然后让编码 agent 使用 `text-to-lottie` 生成 Lottie 动画。
+
+捕获实现动画的帧：
 
 ```bash
 npx tsx scripts/capture-animation.ts --url http://localhost:3000 --output-dir artifacts/frames --duration-ms 3000 --fps 10
 ```
 
-Compare the two videos:
+对比两个视频：
 
 ```bash
 python3 scripts/compare-video.py \
@@ -140,26 +170,41 @@ python3 scripts/compare-video.py \
   --motion-threshold 0.93
 ```
 
-Video comparison checks both frame similarity and frame-to-frame motion similarity, so timing, speed, easing, acceleration, deceleration, and loop seams are not judged by still frames alone.
+视频对比会同时检查帧相似度和逐帧运动相似度。因此不能只靠静帧判断，还要检查时序、速度、缓动、加速、减速、阶段 handoff、形态连续性和循环接缝。
 
-### Finish-time check
+### Lottie / 矢量动效质量门
 
-For platforms without a native Stop Hook, run the check script manually:
+复刻 Lottie、SVG 或矢量关键帧动画时，需要额外检查：
+
+- 运动语义：元素身份、动作顺序、移动方向、视觉因果必须与参考一致。
+- 阶段拆分：每个 phase 的起止时间、可见元素、活跃变换和 handoff 点要清晰。
+- handoff invariant：A -> B 变换中，中心、边界框、scale、rotation、opacity、轮廓、层级和速度应连续，除非参考中存在明确切断、遮挡或闪白。
+- stutter check：检查 transition 附近是否有重复位置、重复 hold、关键帧簇、微停顿、回退或速度重置。
+- 形态过渡：形态到形态、阶段到阶段的衔接是否自然，是主要验收标准。
+- 字体和渲染：尽早确定字体/轮廓/降级方案，检查字重、间距、边缘质量和抗锯齿。
+- 回归检查：每次修复后检查旧问题是否回归，是否新增卡顿、瞬移、artifact、字体漂移或 frame-patching 快捷修补。
+
+### 完成前检查
+
+没有原生 Stop Hook 的平台，需要手动运行检查脚本：
 
 ```bash
 python3 hooks/visual_stop_check.py
 ```
 
-## Requirements
+最终回复必须包含：执行过的验证命令、迭代次数、剩余已知差异，以及对比输出路径。
 
-- Node.js + `npx` (for TypeScript scripts)
-- Playwright and browser binaries (`npm install -D playwright` and `npx playwright install chromium`, or project-local equivalents)
-- `tsx` for running TypeScript scripts (`npm install -D tsx`, or use `npx tsx`)
-- Python 3
-- Pillow (`python3 -m pip install pillow`)
-- OpenCV + NumPy for video comparison (`python3 -m pip install opencv-python numpy`)
-- `watch` skill for video reference analysis (optional but recommended)
+## 依赖
 
-## License
+- Node.js + `npx`，用于 TypeScript 脚本。
+- Playwright 和浏览器二进制文件：`npm install -D playwright` 和 `npx playwright install chromium`，或项目本地等价安装。
+- `tsx`，用于运行 TypeScript 脚本：`npm install -D tsx`，或使用 `npx tsx`。
+- Python 3。
+- Pillow：`python3 -m pip install pillow`。
+- OpenCV + NumPy，用于视频对比：`python3 -m pip install opencv-python numpy`。
+- `ffmpeg`，用于视频全量抽帧。
+- `watch` skill，用于视频参考分析，非必需但推荐。
+
+## 许可证
 
 MIT
